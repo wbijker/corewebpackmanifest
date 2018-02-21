@@ -15,15 +15,24 @@ namespace CoreWebpackManifest
 {
     public class WebpackManifest
     {
+        private IHostingEnvironment _hosting;
         private WebpackConfig _config;
         private Dictionary<string, string> _json = null;
-        
-        public WebpackManifest(WebpackConfig config)
+        private string _buildDir;
+        private bool _isDev;
+
+        public WebpackManifest(IOptions<WebpackConfig> config ,IHostingEnvironment hosting)
         {
-            _config = config;
+            _config = config.Value;
+            _hosting = hosting;
+
+            _buildDir = Path.Combine(_hosting.ContentRootPath, _config.BuildDirectory);
+            _isDev = 
+                _config.Usage == WebpackConfigUsage.DEVSERVER ||
+                (_config.Usage == WebpackConfigUsage.AUTODETECT && !Directory.Exists(_buildDir));
         }
 
-        public void Read()
+        private void Read()
         {
             _json = JsonConvert.DeserializeObject<Dictionary<string, string>>(ReadManifest());
         }
@@ -33,9 +42,10 @@ namespace CoreWebpackManifest
             // try to read from node web server
             using (HttpClient client = new HttpClient())
             {
+                var request = _config.GetUrl(_config.Manifest);
                 try 
                 {
-                    var resp = client.SendAsync(new HttpRequestMessage(HttpMethod.Get, _config.GerManifestUrl())).Result;
+                    var resp = client.SendAsync(new HttpRequestMessage(HttpMethod.Get, request)).Result;
                     if (resp.StatusCode == HttpStatusCode.OK)
                     {
                         return resp.Content.ReadAsStringAsync().Result;
@@ -46,7 +56,7 @@ namespace CoreWebpackManifest
                 {
                     throw new Exception(
                         "The webpack hot module reloading manifest file does not exits.\n" +
-                        $"Request URL: {uri}.\n" +
+                        $"Request URL: {request}.\n" +
                         "Please run \"npm run dev\" and try again.\n" + 
                         $"Details: \"{e.Message}\""
                     );
@@ -56,12 +66,13 @@ namespace CoreWebpackManifest
 
         private string ReadFromBuild()
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), MANIFEST);
+            string path = Path.Combine(_buildDir, _config.Manifest);
             if (!File.Exists(path)) 
             {
                 throw new Exception(
-                    $"Missing manifest file: {path}.\n" + 
-                    "Please check your build output path configuration, and try again\n"
+                    $"Manifest file not found.\n" +
+                    "Path: {path}.\n" + 
+                    "Please check your build output, and try again"
                 );
             }
             return File.ReadAllText(path);
@@ -69,26 +80,24 @@ namespace CoreWebpackManifest
 
         private string ReadManifest()
         {
-            if (_isDev)  
+            if (_isDev)
             {
                 return ReadManifestFromDev();   
             }
-
             // otherwise read from the local path. npm run build should output this file
             return ReadFromBuild();
         }
 
-        public string[] GetPaths(params string[] paths)
-        {
-            return paths.Select(p => GetPath(p)).ToArray();
-        }
-
         public string GetPath(string name)
         {
+            if (_json == null) 
+            {
+                Read();
+            }
             string path = "";
             if (_json != null && _json.TryGetValue(name, out path)) 
             {
-                return _isDev ? DEVSERVER + path : path;
+                return _isDev ? _config.GetUrl(path) : path;
             }
             throw new Exception(
                 $"Could not locate file \"{name}\" in manifest.\n" + 
