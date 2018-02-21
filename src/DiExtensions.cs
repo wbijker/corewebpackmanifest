@@ -7,10 +7,11 @@ namespace CoreWebpackManifest
     {
         public static void UseWebpackManifest(this IServiceCollection services, Action<WebpackConfig> config)
         {
-            var defaultConfig = new WebpackConfig();
-            config.Invoke(defaultConfig);
-
-            services.AddSingleton(new WebpackManifest(defaultConfig));            
+            // var defaultConfig = new WebpackConfig();
+            // config.Invoke(defaultConfig);
+            services.Configure(config);
+            services.AddSingleton<WebpackManifest>();
+            //  new WebpackManifest(defaultConfig));
         }
 
     }
