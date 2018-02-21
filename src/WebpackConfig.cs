@@ -1,12 +1,13 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CoreWebpackManifest
 {
     /*
-    Usage has to do with where the a request webpack chunk lies:
-    -It can either be served as static content from prebuild webpack
+    Usage has to do with where a request webpack chunk lies:
+    It can either be served as static content from prebuild webpack
         <script src="dist/app.1230492kad4sd.js"/>
-    -or it can be served from webpack dev server.
+    or it can be served from webpack dev server.
         <script src="http://localhost:8080/webpack/app.js"/>
     */
     public enum WebpackConfigUsage
@@ -15,9 +16,6 @@ namespace CoreWebpackManifest
         // otherwise will use dev server
         AUTODETECT,
         
-        // IHostingEnvironment will be used to check if app runs as dev or build
-        ENVIRONMENT,
-
         // Always use development server
         DEVSERVER,
 
@@ -27,12 +25,10 @@ namespace CoreWebpackManifest
 
     public class WebpackConfig
     {
-        // Host, Port and public path is all dev server configurations
-        // It should match webpack configuration 
-        public string Host { get; set; }
-        public int Port { get; set; }
-        public string PublicPath { get; set; }
-        // Manifest is the name of the file produces from webpack Manifest plugin
+        // Combine schema, host, port ad public path in one Uri
+        public Uri DevServer { get; set; }
+        
+        // Manifest is the name of the file produced from webpack Manifest plugin
         public string Manifest { get; set; }
 
         public WebpackConfigUsage Usage { get; set; }
@@ -42,17 +38,15 @@ namespace CoreWebpackManifest
 
         public WebpackConfig()
         {
-            Host = "localhost";
-            Port = 8080;
-            PublicPath = "webpack";
+            DevServer = new Uri("http://localhost:8080/webpack");
             Manifest = "manifest.json";
             Usage = WebpackConfigUsage.AUTODETECT;
             BuildDirectory = "build";
         }
 
-        public string GerManifestUrl()
+        public string GetUrl(string path)
         {
-            return $"http://{Host}:{Port}/{PublicPath}/{Manifest}";
+            return (new Uri(DevServer, path)).ToString();
         }
     }
 }
