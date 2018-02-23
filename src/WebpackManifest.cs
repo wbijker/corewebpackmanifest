@@ -14,7 +14,7 @@ namespace CoreWebpackManifest
         private IHostingEnvironment _hosting;
         private WebpackConfig _config;
         private Dictionary<string, string> _json = null;
-        private string _buildDir;
+        private string _buildManifestFile;
         private bool _isDev;
 
         public WebpackManifest(IOptions<WebpackConfig> config ,IHostingEnvironment hosting)
@@ -22,10 +22,12 @@ namespace CoreWebpackManifest
             _config = config.Value;
             _hosting = hosting;
 
-            _buildDir = Path.Combine(_hosting.ContentRootPath, _config.BuildDirectory);
+            string buildPath = Path.Combine(_hosting.ContentRootPath, _config.BuildDirectory);
+            _buildManifestFile = Path.Combine(buildPath, _config.Manifest);
+        
             _isDev = 
                 _config.Usage == WebpackMode.DEVSERVER ||
-                (_config.Usage == WebpackMode.AUTODETECT && !Directory.Exists(_buildDir));
+                (_config.Usage == WebpackMode.AUTODETECT && !File.Exists(_buildManifestFile));
         }
 
         private void Read()
@@ -62,16 +64,15 @@ namespace CoreWebpackManifest
 
         private string ReadFromBuild()
         {
-            string path = Path.Combine(_buildDir, _config.Manifest);
-            if (!File.Exists(path)) 
+            if (!File.Exists(_buildManifestFile)) 
             {
                 throw new Exception(
-                    $"Manifest file not found.\n" +
-                    "Path: {path}.\n" + 
+                    "Manifest file not found.\n" +
+                    $"Path: {_buildManifestFile}.\n" + 
                     "Please check your build output, and try again"
                 );
             }
-            return File.ReadAllText(path);
+            return File.ReadAllText(_buildManifestFile);
         }
 
         private string ReadManifest()

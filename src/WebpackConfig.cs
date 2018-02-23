@@ -38,7 +38,7 @@ namespace CoreWebpackManifest
         public WebpackConfig()
         {
             // The defaults
-            DevServer = new Uri("http://localhost:8080/webpack");
+            DevServer = new Uri("http://localhost:8080/webpack/");
             Manifest = "manifest.json";
             Usage = WebpackMode.AUTODETECT;
             BuildDirectory = "build";
