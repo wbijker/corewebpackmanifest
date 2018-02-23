@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
@@ -28,8 +24,8 @@ namespace CoreWebpackManifest
 
             _buildDir = Path.Combine(_hosting.ContentRootPath, _config.BuildDirectory);
             _isDev = 
-                _config.Usage == WebpackConfigUsage.DEVSERVER ||
-                (_config.Usage == WebpackConfigUsage.AUTODETECT && !Directory.Exists(_buildDir));
+                _config.Usage == WebpackMode.DEVSERVER ||
+                (_config.Usage == WebpackMode.AUTODETECT && !Directory.Exists(_buildDir));
         }
 
         private void Read()
