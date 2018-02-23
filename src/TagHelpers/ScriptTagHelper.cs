@@ -16,12 +16,10 @@ namespace CoreWebpackManifest.TagHelpers
         {
             _manifest = manifest;
         }
-
+        
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
-            Console.WriteLine("--ScripTagHelper ran!" + this.WebpackChunk);
-            // _manifest.GetPath(WebpackChunk);
-            output.Attributes.SetAttribute("src", this.WebpackChunk + ".js");
+            output.Attributes.SetAttribute("src", _manifest.GetPath(this.WebpackChunk));
         }
     }   
 }

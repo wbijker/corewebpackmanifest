@@ -19,8 +19,7 @@ namespace CoreWebpackManifest.TagHelpers
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
-            // _manifest.GetPath(WebpackChunk);
-            output.Attributes.SetAttribute("href", this.WebpackChunk + ".css");
+            output.Attributes.SetAttribute("href", _manifest.GetPath(this.WebpackChunk));
             output.Attributes.SetAttribute("rel", "stylesheet");
         }
     }   
